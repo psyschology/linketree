@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Goluverse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #f0f0f0;
+            overflow-x: hidden;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .font-cormorant { font-family: 'Cormorant Garamond', serif; }
+        .scroll-container {
+            height: 100vh;
+            width: 100vw;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+        }
+        .scroll-section {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .background-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.5s ease-in-out;
+        }
+        .scroll-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 80%);
+            z-index: -1;
+        }
+        .content-box {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.2s ease-out 0.3s, transform 1.2s ease-out 0.3s;
+            max-width: 800px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+        }
+        .scroll-section.visible .content-box {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-section.visible .background-element {
+            transform: scale(1.05);
+        }
+        h1 { font-size: clamp(2.5rem, 8vw, 5rem); }
+        h2 { font-size: clamp(2rem, 6vw, 3.5rem); }
+        p { font-size: clamp(1rem, 2.5vw, 1.25rem); }
+        .down-arrow {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); } 40% { transform: translate(-50%, -15px); } 60% { transform: translate(-50%, -5px); } }
+    </style>
+</head>
+<body>
+    <div class="scroll-container">
+        
+        <section id="section1" class="scroll-section">
+            <video autoplay loop muted playsinline class="background-element">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-dazzling-galaxy-1495-large.mp4" type="video/mp4">
+            </video>
+            <div class="content-box">
+                <h1 class="font-cormorant font-bold leading-tight">The universe is vast.</h1>
+                <p class="mt-4 font-light tracking-wider">But mine began in a nursery classroom.</p>
+            </div>
+            <div class="down-arrow text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+        </section>
+
+        <section id="section2" class="scroll-section">
+            <img src="IMG-20250627-WA0008.jpg" alt="Golu Selfie" class="background-element">
+            <div class="content-box">
+                <h2 class="font-cormorant font-semibold">A Library of Memories</h2>
+                <p class="mt-6 font-light leading-relaxed">
+                    My memory isn't a gift; it's an archive dedicated to you. The bench where your name was a secret. The Milkybar at the station. Being the safe place you trusted when you felt vulnerable. These aren't just moments. They are the foundation.
+                </p>
+            </div>
+        </section>
+        
+        <section id="section3" class="scroll-section">
+            <img src="IMG-20250703-WA0003.jpg" alt="Golu and me" class="background-element">
+            <div class="content-box">
+                <h2 class="font-cormorant font-semibold">The Pink Dress. The Pink Roses.</h2>
+                <p class="mt-6 font-light leading-relaxed">
+                    That day was a glimpse of what is real. In a world of noise, you are the harmony. In this photograph, the whole universe stopped for a moment just to admire us. You are the masterpiece.
+                </p>
+            </div>
+        </section>
+
+        <section id="section4" class="scroll-section">
+            <img src="IMG-20250627-WA0007.jpg" alt="Golu on staircase" class="background-element">
+            <div class="content-box">
+                <h1 class="font-cormorant font-bold">You are the Queen.</h1>
+                <p class="mt-6 font-light leading-relaxed">
+                    Not of some distant kingdom, but of a world that lives inside me. Every line of code, every ambition, every battle... it is all to build a kingdom worthy of you.
+                </p>
+                 <p class="mt-8 font-cormorant text-2xl italic">~ The boy who never stopped building.</p>
+            </div>
+        </section>
+
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.scroll-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    } else {
+                        // Optional: remove class when it scrolls out of view to re-trigger animation
+                        // entry.target.classList.remove('visible'); 
+                    }
+                });
+            }, { threshold: 0.6 });
+            sections.forEach(section => { observer.observe(section); });
+        });
+    </script>
+</body>
+</html>
+
