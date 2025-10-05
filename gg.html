@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400&display=swap');
+
+        :root {
+            --bg-color: #000000;
+            --text-color: #e0e0e0;
+            --accent-color: #e6c566; /* A warmer, more romantic gold */
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Poppins', sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            scroll-behavior: smooth;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; }
+
+        .chapter {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+            box-sizing: border-box;
+            display: grid;
+            place-items: center;
+        }
+
+        .background-image {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-position: center center;
+            background-size: cover;
+            background-attachment: fixed;
+            z-index: 0;
+            animation: ken-burns 20s infinite;
+        }
+
+        @keyframes ken-burns {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+        
+        .content {
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1, h2 {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-style: italic;
+            margin: 0;
+            color: #fff;
+        }
+        
+        p {
+            font-size: clamp(1.1rem, 2vw, 1.3rem);
+            line-height: 1.8;
+            color: #d0d0d0;
+            font-weight: 300;
+        }
+
+        /* --- Entry Gate --- */
+        #entry-gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 1.5s ease;
+        }
+        #entry-gate .content { animation: heartbeat 2s infinite ease-out; }
+        #entry-gate h2 { font-size: 2.5rem; }
+        #entry-gate p { color: #888; }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 10px rgba(230, 197, 102, 0.3); }
+            50% { transform: scale(1.03); text-shadow: 0 0 20px rgba(230, 197, 102, 0.7); }
+        }
+
+        /* --- Hero Chapter --- */
+        #hero .background-image { background-image: url('IMG-20250627-WA0007.jpg'); }
+        #hero h1 { font-size: clamp(3.5rem, 10vw, 8rem); text-shadow: 0 0 30px rgba(0,0,0,0.8); }
+
+        /* --- Chapter Styles --- */
+        #chapter-beginning .content { text-align: left; max-width: 600px; }
+        #chapter-meeting .background-image { background-image: url('IMG-20250703-WA0002.jpg'); }
+        
+        .image-gallery {
+            display: grid; grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem; margin-top: 3rem; align-items: center;
+        }
+        .gallery-image {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 10px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+        .gallery-image.center { transform: scale(1.1); z-index: 10; }
+        .gallery-image:hover { transform: scale(1.15); filter: brightness(1.2); }
+
+        /* --- Final Chapter --- */
+        #final-chapter { background: #000; }
+        #final-chapter p {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 500;
+            line-height: 1.4;
+            color: #fff;
+            text-shadow: 0 0 25px var(--accent-color), 0 0 40px rgba(230, 197, 102, 0.5);
+        }
+
+        /* --- Animations --- */
+        .reveal { opacity: 0; }
+        .reveal.visible { opacity: 1; }
+        .reveal span {
+            opacity: 0;
+            transform: translateY(20px);
+            display: inline-block;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="entry-gate">
+        <div class="content">
+            <h2>A Story</h2>
+            <p>(Click to begin)</p>
+        </div>
+    </div>
+
+    <main id="story-content" style="display: none;">
+        <section id="hero" class="chapter">
+            <div class="background-image"></div>
+            <div class="overlay"></div>
+            <div class="content">
+                <h1 class="reveal">For Golu</h1>
+            </div>
+        </section>
+
+        <section id="chapter-beginning" class="chapter">
+            <div class="content">
+                <h2 class="reveal">Chapter I: The Bench</h2>
+                <p class="reveal">It began with a name whispered to a wooden bench. A silly, childish crush, a secret "I love you Golu" written in chalk and erased. I didn't know what love was then. I just knew that from the very beginning, it always felt like you.</p>
+            </div>
+        </section>
+        
+        <section id="chapter-reconnection" class="chapter">
+            <div class="content">
+                <h2 class="reveal">Chapter II: The Confidant</h2>
+                <p class="reveal">Years later, we found each other again. You were scared to show your face to the world, but you showed your fears to me. In your lowest moments, you trusted me. That trust became the foundation of my world.</p>
+                <div class="image-gallery">
+                    <img src="IMG-20250627-WA0003.jpg" alt="Memory 1" class="gallery-image reveal">
+                    <img src="IMG-20250627-WA0005.jpg" alt="Memory 2" class="gallery-image center reveal">
+                    <img src="IMG-20250627-WA0008.jpg" alt="Memory 3" class="gallery-image reveal">
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter-meeting" class="chapter">
+            <div class="background-image"></div>
+            <div class="overlay"></div>
+            <div class="content">
+                <h2 class="reveal">Chapter III: The Harmony</h2>
+                <p class="reveal">And then, this. The day pixels became real. In a world of noise, everything went silent. It was just us. The universe stopped for a moment, just to admire you.</p>
+            </div>
+        </section>
+        
+        <section id="final-chapter" class="chapter">
+            <div class="content">
+                <p class="reveal">Tu meri baahon mein duniya bhula de ❤️</p>
+            </div>
+        </section>
+    </main>
+
+    <audio id="background-song" src="darkhaast.mp3" loop></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const entryGate = document.getElementById('entry-gate');
+            const storyContent = document.getElementById('story-content');
+            const backgroundSong = document.getElementById('background-song');
+
+            entryGate.addEventListener('click', () => {
+                backgroundSong.play().catch(error => {
+                    console.log("Autoplay prevented, but will start on interaction:", error);
+                });
+                
+                entryGate.style.opacity = '0';
+                setTimeout(() => {
+                    entryGate.style.display = 'none';
+                    storyContent.style.display = 'block';
+                    animateText(document.querySelector('#hero .reveal'));
+                }, 1000);
+            }, { once: true });
+
+            function setupTextAnimation(element) {
+                const text = element.innerText;
+                element.innerHTML = '';
+                text.split(' ').forEach(word => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.style.display = 'inline-block';
+                    wordSpan.style.marginRight = '0.4em';
+                    word.split('').forEach(char => {
+                        const charSpan = document.createElement('span');
+                        charSpan.innerText = char;
+                        wordSpan.appendChild(charSpan);
+                    });
+                    element.appendChild(wordSpan);
+                });
+            }
+
+            function animateText(element) {
+                element.classList.add('visible');
+                const chars = element.querySelectorAll('span > span');
+                chars.forEach((char, index) => {
+                    setTimeout(() => {
+                        char.style.opacity = '1';
+                        char.style.transform = 'translateY(0)';
+                    }, index * 30);
+                });
+            }
+            
+            const revealElements = document.querySelectorAll('.reveal');
+            revealElements.forEach(el => {
+                if (el.tagName === 'P' || el.tagName === 'H2') {
+                    setupTextAnimation(el);
+                }
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        if (el.tagName === 'P' || el.tagName === 'H2') {
+                            animateText(el);
+                        } else {
+                            el.classList.add('visible');
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+
+            revealElements.forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
+
