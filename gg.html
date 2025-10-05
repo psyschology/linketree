@@ -135,9 +135,160 @@
         }
 
         /* --- Animations --- */
-        .reveal { opacity: 0; }
+        .reveal { opacity: 0; transition: opacity 1.5s ease; }
         .reveal.visible { opacity: 1; }
-        .reveal span {
+        .reveal-char {
+            opacity: 0;
+            transform: translateY(20px);
+            display: inline-block;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="entry-gate">
+        <div class="content">
+            <h2>A Story</h2>
+            <p>(Click to begin)</p>
+        </div>
+    </div>
+
+    <main id="story-content" style="display: none;">
+        <section id="hero" class="chapter">
+            <div class="background-image"></div>
+            <div class="overlay"></div>
+            <div class="content">
+                <h1 class="reveal">For Golu</h1>
+            </div>
+        </section>
+
+        <section id="chapter-beginning" class="chapter">
+            <div class="content">
+                <h2 class="reveal">Chapter I: The Bench</h2>
+                <p class="reveal">It began with a name whispered to a wooden bench. A silly, childish crush, a secret "I love you Golu" written in chalk and erased. I didn't know what love was then. I just knew that from the very beginning, it always felt like you.</p>
+            </div>
+        </section>
+        
+        <section id="chapter-reconnection" class="chapter">
+            <div class="content">
+                <h2 class="reveal">Chapter II: The Confidant</h2>
+                <p class="reveal">Years later, we found each other again. You were scared to show your face to the world, but you showed your fears to me. In your lowest moments, you trusted me. That trust became the foundation of my world.</p>
+                <div class="image-gallery">
+                    <img src="IMG-20250627-WA0003.jpg" alt="Memory 1" class="gallery-image reveal">
+                    <img src="IMG-20250627-WA0005.jpg" alt="Memory 2" class="gallery-image center reveal">
+                    <img src="IMG-20250627-WA0008.jpg" alt="Memory 3" class="gallery-image reveal">
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter-meeting" class="chapter">
+            <div class="background-image"></div>
+            <div class="overlay"></div>
+            <div class="content">
+                <h2 class="reveal">Chapter III: The Harmony</h2>
+                <p class="reveal">And then, this. The day pixels became real. In a world of noise, everything went silent. It was just us. The universe stopped for a moment, just to admire you.</p>
+            </div>
+        </section>
+        
+        <section id="final-chapter" class="chapter">
+            <div class="content">
+                <p class="reveal">Tu meri baahon mein duniya bhula de ❤️</p>
+            </div>
+        </section>
+    </main>
+
+    <audio id="background-song" src="darkhaast.mp3" loop></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const entryGate = document.getElementById('entry-gate');
+            const storyContent = document.getElementById('story-content');
+            const backgroundSong = document.getElementById('background-song');
+            const revealElements = document.querySelectorAll('.reveal');
+
+            // --- Text Animation Setup ---
+            function setupTextAnimation(element) {
+                const text = element.textContent.trim();
+                element.innerHTML = '';
+                const words = text.split(' ');
+                words.forEach((word) => {
+                    const wordWrapper = document.createElement('span');
+                    wordWrapper.style.display = 'inline-block';
+                    word.split('').forEach(char => {
+                        const charSpan = document.createElement('span');
+                        charSpan.className = 'reveal-char';
+                        charSpan.textContent = char;
+                        wordWrapper.appendChild(charSpan);
+                    });
+                    element.appendChild(wordWrapper);
+                    element.append(' ');
+                });
+            }
+
+            function animateText(element) {
+                element.classList.add('visible');
+                const chars = element.querySelectorAll('.reveal-char');
+                chars.forEach((char, index) => {
+                    setTimeout(() => {
+                        char.style.opacity = '1';
+                        char.style.transform = 'translateY(0)';
+                    }, index * 30);
+                });
+            }
+
+            revealElements.forEach(el => {
+                if (el.tagName === 'P' || el.tagName === 'H2' || el.tagName === 'H1') {
+                    setupTextAnimation(el);
+                }
+            });
+
+            // --- Entry and Music ---
+            entryGate.addEventListener('click', () => {
+                backgroundSong.play().catch(error => {
+                    console.log("Autoplay prevented:", error);
+                });
+                
+                entryGate.style.opacity = '0';
+                setTimeout(() => {
+                    entryGate.style.display = 'none';
+                    storyContent.style.display = 'block';
+                    // Defer first animation to ensure content is painted
+                    setTimeout(() => {
+                        const firstTextElement = document.querySelector('#hero .reveal');
+                        if (firstTextElement) {
+                             animateText(firstTextElement);
+                        }
+                    }, 100);
+                }, 1000);
+            }, { once: true });
+
+            // --- Scroll Animation Observer ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        if (el.tagName === 'P' || el.tagName === 'H2' || el.tagName === 'H1') {
+                            animateText(el);
+                        } else {
+                            el.classList.add('visible');
+                        }
+                        observer.unobserve(el);
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+
+            revealElements.forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
+
             opacity: 0;
             transform: translateY(20px);
             display: inline-block;
