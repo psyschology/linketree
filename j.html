@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Little Infinity</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background-color: #00000a; cursor: none; }
+        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
+        .ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; color: #e0e0e0; font-family: 'Lora', serif; }
+        .intro-text, .outro-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            letter-spacing: 1px;
+        }
+        .memory-scene {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.5s ease, visibility 1.5s ease;
+        }
+        .memory-scene.active { opacity: 1; visibility: visible; }
+        .memory-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        .memory-image {
+            max-height: 60vh;
+            border-radius: 1rem;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.15);
+            margin-bottom: 2.5rem;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .memory-scene.active .memory-image { transform: scale(1); opacity: 1; transition-delay: 0.5s; }
+        .memory-text {
+            font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+            line-height: 1.8;
+            max-width: 600px;
+            font-style: italic;
+        }
+        .cursor-light {
+            position: fixed;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 60%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="cursor-light" id="cursor-light"></div>
+    <canvas id="main-canvas"></canvas>
+    <div class="ui-layer">
+        <p id="intro-text" class="intro-text"></p>
+        <div id="memory-scene" class="memory-scene">
+            <div class="memory-content">
+                <img id="memory-image" class="memory-image" src="" alt="Memory">
+                <p id="memory-text" class="memory-text"></p>
+            </div>
+        </div>
+        <p id="outro-text" class="outro-text"></p>
+    </div>
+
+    <script>
+        // --- Core Setup ---
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- UI Elements ---
+        const introText = document.getElementById('intro-text');
+        const outroText = document.getElementById('outro-text');
+        const memoryScene = document.getElementById('memory-scene');
+        const memoryImage = document.getElementById('memory-image');
+        const memoryText = document.getElementById('memory-text');
+        const cursorLight = document.getElementById('cursor-light');
+
+        // --- State ---
+        let mouse = { x: canvas.width / 2, y: canvas.height / 2, radius: 100 };
+        let particles = [];
+        let memories = [];
+        let audioStarted = false;
+        let currentMemory = null;
+        let journeyStarted = false;
+        let journeyComplete = false;
+        let typewriterTimeout;
+
+        const memoryData = [
+            { id: 1, pathPos: 0.2, text: "The world saw flaws. I saw a girl strong enough to trust me with her fears. That trust is my greatest treasure.", image: 'IMG-20250627-WA0003.jpg', note: 'C4' },
+            { id: 2, pathPos: 0.45, text: "A name whispered to a bench. A secret kept safe for a lifetime. This is where the code began.", image: 'IMG-20250627-WA0005.jpg', note: 'E4' },
+            { id: 3, pathPos: 0.7, text: "In this moment, there was no noise. No chaos. Only a perfect harmony. Only us.", image: 'IMG-20250703-WA0002.jpg', note: 'G4' },
+            { id: 4, pathPos: 0.95, text: "You are not a chapter in my life. You are the entire story. The queen of this little infinity.", image: 'IMG-20250627-WA0007.jpg', note: 'C5' }
+        ];
+
+        // --- Audio Engine ---
+        let synth, reverb, sequence;
+        const initAudio = () => {
+            if (audioStarted) return;
+            Tone.start();
+            reverb = new Tone.Reverb({ decay: 15, wet: 0.7 }).toDestination();
+            synth = new Tone.PolySynth(Tone.FMSynth, {
+                harmonicity: 1.5,
+                modulationIndex: 10,
+                envelope: { attack: 0.2, decay: 0.1, sustain: 0.3, release: 2 },
+                modulationEnvelope: { attack: 0.2, decay: 0.1, sustain: 0.3, release: 2 },
+                volume: -12
+            }).connect(reverb);
+            audioStarted = true;
+        };
+
+        // --- Typewriter Effect ---
+        function typeWriter(text, element, onComplete) {
+            clearTimeout(typewriterTimeout);
+            let i = 0;
+            element.innerHTML = "";
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    typewriterTimeout = setTimeout(type, 70);
+                } else if (onComplete) {
+                    onComplete();
+                }
+            }
+            type();
+        }
+
+        // --- Canvas Classes ---
+        class Particle {
+            constructor(x, y, isTrail) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.life = isTrail ? Math.random() * 50 + 50 : Infinity;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life--;
+            }
+            draw() {
+                let alpha = this.life / 100;
+                if (alpha < 0) alpha = 0;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class MemoryNode {
+            constructor(id, x, y, text, image, note) {
+                this.id = id; this.x = x; this.y = y; this.text = text; this.image = image; this.note = note;
+                this.radius = 15; this.detectionRadius = 50; this.isActive = false; this.isTriggered = false;
+            }
+            update() {
+                const dist = Math.hypot(this.x - mouse.x, this.y - mouse.y);
+                this.isActive = dist < this.detectionRadius;
+                if (this.isActive && !this.isTriggered) {
+                    this.trigger();
+                }
+            }
+            trigger() {
+                if (journeyComplete) return;
+                this.isTriggered = true;
+                currentMemory = this;
+                if(audioStarted) synth.triggerAttackRelease(this.note, '1n');
+                memoryImage.src = this.image;
+                memoryScene.classList.add('active');
+                typeWriter(this.text, memoryText);
+            }
+            draw() {
+                if(this.isTriggered) {
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 20;
+                } else if (this.isActive) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.shadowColor = '#FFFFFF';
+                    ctx.shadowBlur = 15;
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                     ctx.shadowColor = '#FFFFFF';
+                    ctx.shadowBlur = 5;
+                }
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // --- Path Generation ---
+        function getPathPoint(t) {
+            const w = canvas.width; const h = canvas.height;
+            const x = w * 0.1 + t * w * 0.8;
+            const y = h / 2 + Math.sin(t * Math.PI * 2.5) * h * 0.35;
+            return { x, y };
+        }
+
+        // --- Main Loop ---
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            if (journeyStarted && !journeyComplete) {
+                particles.push(new Particle(mouse.x, mouse.y, true));
+                
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let t = 0; t <= 1; t += 0.01) {
+                    const p = getPathPoint(t);
+                    if (t === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.stroke();
+
+                let allTriggered = true;
+                memories.forEach(m => {
+                    m.update();
+                    m.draw();
+                    if (!m.isTriggered) allTriggered = false;
+                });
+                
+                if (allTriggered && !journeyComplete) {
+                    journeyComplete = true;
+                    outroText.innerText = "And so, this little infinity is yours.";
+                    outroText.style.opacity = 1;
+                    if(audioStarted) synth.triggerAttackRelease("C6", "1m");
+                }
+
+                if (currentMemory && !currentMemory.isActive) {
+                    memoryScene.classList.remove('active');
+                    currentMemory = null;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // --- Initialization and Event Listeners ---
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 150; i++) particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, false));
+            memories = memoryData.map(data => {
+                const pos = getPathPoint(data.pathPos);
+                return new MemoryNode(data.id, pos.x, pos.y, data.text, data.image, data.note);
+            });
+            
+            introText.innerText = "Follow the light.";
+            setTimeout(() => { introText.style.opacity = 1; }, 500);
+        }
+        
+        window.addEventListener('resize', init);
+
+        document.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            cursorLight.style.left = `${e.clientX}px`;
+            cursorLight.style.top = `${e.clientY}px`;
+        });
+
+        document.addEventListener('click', () => {
+            if (!journeyStarted) {
+                initAudio();
+                journeyStarted = true;
+                introText.style.opacity = 0;
+            }
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+  </html>
+  
